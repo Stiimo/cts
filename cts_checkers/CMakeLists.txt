@@ -1,0 +1,74 @@
+cmake_minimum_required(VERSION 3.5)
+
+# remove unused configuration types
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "possible build types" FORCE)
+project(cts_checkers)
+
+if(CMAKE_SIZEOF_VOID_P EQUAL "4")
+  set(CPU_BITNESS "32")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL "8")
+  set(CPU_BITNESS "64")
+else()
+  message(FATAL_ERROR "Unsupported CPU bitness")
+endif()
+
+if(MSVC_IDE)
+  if(CMAKE_BUILD_TYPE)
+    message(FATAL_ERROR "CMAKE_BUILD_TYPE is not supported by MSVC generator")
+  endif()
+
+  add_definitions(-D_USE_MATH_DEFINES)
+
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/bin${CPU_BITNESS}.debug)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/bin${CPU_BITNESS}.release)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_CURRENT_BINARY_DIR}/bin${CPU_BITNESS}.release-dbg)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/lib${CPU_BITNESS}.debug)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/lib${CPU_BITNESS}.release)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_CURRENT_BINARY_DIR}/lib${CPU_BITNESS}.release-dbg)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/bin${CPU_BITNESS}.debug)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/bin${CPU_BITNESS}.release)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_CURRENT_BINARY_DIR}/bin${CPU_BITNESS}.release-dbg)
+
+else()
+  if(CMAKE_BUILD_TYPE)
+    if(NOT(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Release"))
+      message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE. Possible values: Release [default], Debug")
+    endif()
+  else()
+    message(STATUS "Using default build type: Release")
+    set(CMAKE_BUILD_TYPE "Release")
+  endif()
+
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_INSTALL_RPATH "../lib")  # help linux find libraries directory
+endif()
+
+if(MSVC)
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif(MSVC)
+
+SET(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY ON)
+SET(CPACK_ARCHIVE_COMPONENT_INSTALL ON)  # very important!
+SET(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE ON)  # very important!
+# SET(CPACK_PACKAGE_VERSION ${MARINA_VERSION_STRING})
+include(CPack)
+
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/func_macro.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler_definitions.cmake)
+
+# global include directories
+include_directories(prj.thirdparty)
+include_directories(prj.core)
+
+set(BUILD_SHARED_LIBS ON)
+
+add_subdirectory(prj.thirdparty)
+add_subdirectory(prj.core)
