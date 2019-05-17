@@ -14,6 +14,7 @@
 #include <QtAlgorithms>
 #include <QFileDialog>
 #include <QDebug>
+#include <QDir>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent),
@@ -50,9 +51,14 @@ MainWindow::MainWindow(QWidget *parent) :
     load_problem(ui->problems_box->currentText());
     thread_.start();
 
-    QDir user_dir = QDir::home();
-    user_dir.mkpath(".cts/user/" + contest_id_);
-    user_dir.cd(".cts/user/"+ contest_id_);
+    #ifdef WIN32
+        QDir user_dir = QDir::currentPath();
+    #else
+        QDir user_dir = QDir::home();
+    #endif
+    QString sep = QDir::separator();
+    user_dir.mkpath(".cts" + sep + "user" + sep + contest_id_);
+    user_dir.cd(".cts" + sep + "user" + sep + contest_id_);
     user_file_.setFileName(user_dir.filePath("config.json"));
     QJsonParseError error;
     QJsonObject json_config;
@@ -136,7 +142,8 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::read_contest_settings() {
-    QFile file("./contest/contest_config.json");
+    QString sep = QDir::separator();
+    QFile file(".contest" + sep + "contest_config.json");
     if (!file.exists()) {
         QMessageBox::critical(this, "Load contest", "Contest config file was not found.");
         centralWidget()->setEnabled(false);
@@ -171,8 +178,9 @@ void MainWindow::read_contest_settings() {
 }
 
 void MainWindow::load_problem(QString const& problem_id) {
+    QString sep = QDir::separator();
     QJsonParseError error;
-    problem_ = ProblemConfig::fromJson("./contest/" + contest_id_ + "/", problem_id, error);
+    problem_ = ProblemConfig::fromJson(".contest" + sep + contest_id_ + sep, problem_id, error);
     if (error.error != QJsonParseError::NoError) {
         QMessageBox::critical(this, "Load problem", "Config file has been corrupted\nError: " + error.errorString());
         ui->problems_box->removeItem(ui->problems_box->currentIndex());
@@ -184,16 +192,17 @@ void MainWindow::load_problem(QString const& problem_id) {
     ui->problem_header->item(0, 3)->setText(QString::number(problem_.memory_limit));
     ui->problem_header->item(0, 4)->setText(problem_.checker);
 
-    QFile statement(problem_.dir + "/statement.md");
+    QFile statement(problem_.dir + sep + "statement.md");
     statement.open(QIODevice::ReadOnly | QIODevice::Text);
     content.setText(QString::fromUtf8(statement.readAll()));
 }
 
 void MainWindow::submit_solution() {
+    QString sep = QDir::separator();
     Submit *submit = new Submit();
     submit->id = total_submits_++;
     submit->config.id = ui->problems_box->currentText();
-    submit->config.dir = "./contest/" + contest_id_ + "/" + submit->config.id;
+    submit->config.dir = ".contest" + sep + contest_id_ + sep + submit->config.id;
     submit->config.score = ui->problem_header->item(0, 1)->text().toInt();
     submit->config.time_limit = ui->problem_header->item(0, 2)->text().toInt();
     submit->config.memory_limit = ui->problem_header->item(0, 3)->text().toInt();
@@ -285,7 +294,6 @@ void MainWindow::show_todo_list(bool) {
             << "Add protocol\n"
             << "Add admin functions\n"
             << "Prepare contest\n"
-            << "Merge projects and push to git\n"
             << "Add report buttons on load\n"
             ;
 }

@@ -38,13 +38,14 @@ void SubmitsRunnerThread::wake() {
 }
 
 void SubmitsRunnerThread::run_submit(Submit *submit) {
-    QString file_path = "./.runs/" + QString::number(submit->id) + "_" + submit->config.id + ".py";
+    QString sep = QDir::separator();
+    QString file_path = ".runs" + sep + QString::number(submit->id) + "_" + submit->config.id + ".py";
     QFile source(file_path);
     source.open(QIODevice::WriteOnly | QIODevice::Text);
     source.write(submit->source);
     source.setPermissions(source.permissions() | QFileDevice::ExeUser);
     source.close();
-    QDir dir(submit->config.dir + "/.tests");
+    QDir dir(submit->config.dir + sep + ".tests");
     QStringList tests = dir.entryList(QStringList() << "*.i", QDir::Files, QDir::Name);
     QStringList answers = dir.entryList(QStringList() << "*.a", QDir::Files, QDir::Name);
     SubmitResult *result = new SubmitResult();
@@ -53,11 +54,16 @@ void SubmitsRunnerThread::run_submit(Submit *submit) {
     for (int i = 0; i < tests.size(); ++i) {
         QObject thread_parent;
         QProcess process(&thread_parent);
-        process.setProgram("/bin/sh");
-        process.setArguments(QStringList() << "-c" << "ulimit -v " + QString::number(submit->config.memory_limit * 1024) +
-                           "; timeout " + QString::number(submit->config.time_limit) + " python3 " + file_path);
-        process.setStandardInputFile(dir.path() + "/" + tests[i]);
-        process.setStandardOutputFile("./.tmp/output.txt");
+        #ifdef WIN32
+            process.setProgram("python/python.exe");
+            process.setArguments(QStringList() << file_path);
+        #else
+            process.setProgram("/bin/sh");
+            process.setArguments(QStringList() << "-c" << "ulimit -v " + QString::number(submit->config.memory_limit * 1024) +
+                               "; timeout " + QString::number(submit->config.time_limit) + " python3 " + file_path);
+        #endif
+        process.setStandardInputFile(dir.path() + sep + tests[i]);
+        process.setStandardOutputFile("./.tmp" + sep + "output.txt");
         process.setWorkingDirectory(".");
         process.start();
         process.waitForStarted(-1);
@@ -81,7 +87,7 @@ void SubmitsRunnerThread::run_submit(Submit *submit) {
             }
             case 0: {
                 QString verdict;
-                if (check(verdict, dir.path() + "/" + tests[i], "./.tmp/output.txt", dir.path() + "/" + answers[i],
+                if (check(verdict, dir.path() + sep + tests[i], ".tmp" + sep + "output.txt", dir.path() + sep + answers[i],
                           submit->config.checker)) {
                    ++result->score;
                 } else {
@@ -102,10 +108,15 @@ void SubmitsRunnerThread::run_submit(Submit *submit) {
 }
 
 bool SubmitsRunnerThread::check(QString & verdict, QString /*input*/, QString output, QString answer, QString checker) {
+    QString sep = QDir::separator();
     QObject thread_parent;
     QProcess process(&thread_parent);
     if (checker != "custom") {
-        process.setProgram("./.checkers/" + checker);
+        #ifdef WIN32
+            process.setProgram(".checkers" + sep + checker + ".exe");
+        #else
+            process.setProgram(".checkers" + sep + checker);
+        #endif
     } else {}
     process.setArguments(QStringList() << output << answer);
     process.setWorkingDirectory(".");
