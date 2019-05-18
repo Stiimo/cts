@@ -42,6 +42,7 @@ private slots:
     void update_submit(SubmitResult *result);
     void open_source();
     void show_todo_list(bool);
+    void dump_results(bool);
 };
 
 #endif // MAINWINDOW_H

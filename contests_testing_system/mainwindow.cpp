@@ -28,14 +28,14 @@ MainWindow::MainWindow(QWidget *parent) :
     channel->registerObject(QStringLiteral("content"), &content);
     page->setWebChannel(channel);
     ui->problem_text->setUrl(QUrl("qrc:/index.html"));
-    QAction *todo = ui->menu_bar->addAction("TODO");
+//    QAction *todo = ui->menu_bar->addAction("TODO");
     QAction *quit = ui->menu_bar->addAction("Quit");
     QAction *dump = ui->menu_admin->addAction("Download results");
     QAction *reset = ui->menu_admin->addAction("Reset user");
 
-    connect(todo, &QAction::triggered, this, &MainWindow::show_todo_list);
+//    connect(todo, &QAction::triggered, this, &MainWindow::show_todo_list);
     connect(quit, &QAction::triggered, this, [this](bool){ close(); });
-    connect(dump, &QAction::triggered, this, &MainWindow::show_todo_list);
+    connect(dump, &QAction::triggered, this, &MainWindow::dump_results);
     connect(reset, &QAction::triggered, this, &MainWindow::show_todo_list);
     connect(ui->problems_box, QOverload<QString const&>::of(&QComboBox::currentIndexChanged), this, &MainWindow::load_problem);
     connect(ui->submit_button, &QAbstractButton::released, this, &MainWindow::submit_solution);
@@ -301,4 +301,29 @@ void MainWindow::show_todo_list(bool) {
 void MainWindow::show_report(SubmitResult *result) {
     ReportWindow report(this, result);
     report.exec();
+}
+
+void MainWindow::dump_results(bool) {
+    QString sep = QDir::separator();
+    QDir dump_dir("report");
+    if (dump_dir.exists()) {
+        dump_dir.removeRecursively();
+    }
+    QDir::current().mkdir("report");
+    if (!user_file_.copy("report" + sep + "config.json")) {
+        QMessageBox::critical(this, "Download resuts", "Cannot copy some files.");
+        return;
+    }
+    QDir runs(".runs");
+    QStringList files = runs.entryList(QDir::Files);
+    for(int i = 0; i< files.count(); i++) {
+        QString srcName = ".runs" + sep + files[i];
+        QString destName = "report" + sep + files[i];
+        bool success = QFile::copy(srcName, destName);
+        if (!success) {
+            QMessageBox::critical(this, "Download resuts", "Cannot copy some files.");
+            return;
+        }
+    }
+    QMessageBox::information(this, "Download resuts", "Finished.");
 }

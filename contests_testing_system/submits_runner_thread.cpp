@@ -4,7 +4,6 @@
 #include <QDir>
 #include <QStringList>
 #include <QProcess>
-#include <QDebug>
 
 void SubmitsRunnerThread::run() {
     while (!isInterruptionRequested()) {
@@ -45,7 +44,8 @@ void SubmitsRunnerThread::run_submit(Submit *submit) {
     source.write(submit->source);
     source.setPermissions(source.permissions() | QFileDevice::ExeUser);
     source.close();
-    QDir dir(submit->config.dir + sep + ".tests");
+    QDir dir;
+    dir.cd(submit->config.dir + sep + "tests");
     QStringList tests = dir.entryList(QStringList() << "*.i", QDir::Files, QDir::Name);
     QStringList answers = dir.entryList(QStringList() << "*.a", QDir::Files, QDir::Name);
     SubmitResult *result = new SubmitResult();
@@ -55,7 +55,7 @@ void SubmitsRunnerThread::run_submit(Submit *submit) {
         QObject thread_parent;
         QProcess process(&thread_parent);
         #ifdef WIN32
-            process.setProgram("python/python.exe");
+            process.setProgram("python3.7\\python.exe");
             process.setArguments(QStringList() << file_path);
         #else
             process.setProgram("/bin/sh");
@@ -63,7 +63,7 @@ void SubmitsRunnerThread::run_submit(Submit *submit) {
                                "; timeout " + QString::number(submit->config.time_limit) + " python3 " + file_path);
         #endif
         process.setStandardInputFile(dir.path() + sep + tests[i]);
-        process.setStandardOutputFile("./.tmp" + sep + "output.txt");
+        process.setStandardOutputFile(".tmp" + sep + "output.txt");
         process.setWorkingDirectory(".");
         process.start();
         process.waitForStarted(-1);

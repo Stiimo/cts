@@ -1,6 +1,8 @@
 #include "report_window.h"
 #include "ui_report_window.h"
 
+#include <QAbstractButton>
+
 ReportWindow::ReportWindow(QWidget *parent, SubmitResult *result) :
     QDialog(parent),
     ui(new Ui::ReportWindow)
@@ -12,6 +14,7 @@ ReportWindow::ReportWindow(QWidget *parent, SubmitResult *result) :
         QTableWidgetItem *item = new QTableWidgetItem(result->tests[i]);
         ui->tests_table->setItem(i, 0, item);
     }
+    connect(ui->ok_button, &QAbstractButton::released, this, &QDialog::accept);
 }
 
 ReportWindow::~ReportWindow()

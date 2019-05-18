@@ -23,39 +23,40 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 CONFIG += c++11
+CONFIG -= qtquickcompiler
 
 win32 {
     CONFIG += windows
 }
 
 SOURCES += \
-    $$PWD/main.cpp \
-    $$PWD/mainwindow.cpp \
-    $$PWD/document.cpp \
-    $$PWD/problem_page.cpp \
-    $$PWD/submits_runner_thread.cpp \
-    $$PWD/create_user_dialog.cpp \
-    $$PWD/report_window.cpp
+    main.cpp \
+    mainwindow.cpp \
+    document.cpp \
+    problem_page.cpp \
+    submits_runner_thread.cpp \
+    create_user_dialog.cpp \
+    report_window.cpp
 
 HEADERS += \
-    $$PWD/mainwindow.h \
-    $$PWD/document.h \
-    $$PWD/problem_config.h \
-    $$PWD/problem_page.h \
-    $$PWD/submits_runner_thread.h \
-    $$PWD/submit.h \
-    $$PWD/submit_result.h \
-    $$PWD/create_user_dialog.h \
-    $$PWD/report_window.h
+    mainwindow.h \
+    document.h \
+    problem_config.h \
+    problem_page.h \
+    submits_runner_thread.h \
+    submit.h \
+    submit_result.h \
+    create_user_dialog.h \
+    report_window.h
 
 FORMS += \
-    $$PWD/mainwindow.ui \
-    $$PWD/create_user_dialog.ui \
-    $$PWD/report_window.ui
+    mainwindow.ui \
+    create_user_dialog.ui \
+    report_window.ui
 
 RESOURCES += \
-    $$PWD/resources/contests_testing_system.qrc
+    resources/contests_testing_system.qrc
 
 DISTFILES += \
-    $$PWD/resources/3rdparty/MARKDOWN-LICENSE.txt \
-    $$PWD/resources/3rdparty/MARKED-LICENSE.txt
+    resources/3rdparty/MARKDOWN-LICENSE.txt \
+    resources/3rdparty/MARKED-LICENSE.txt
